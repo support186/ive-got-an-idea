@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import ReactDOM from 'react-dom/client';
-import { Send, Globe, Download, Share2, ArrowLeft, Loader2, Music, Sparkles } from 'lucide-react';
+import { Send, Globe, Download, Share2, ArrowLeft, Loader2, Sparkles } from 'lucide-react';
 
-// --- CONFIGURATION ---
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY || ""; 
 
 const App = () => {
@@ -13,8 +12,11 @@ const App = () => {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
 
-  // --- API HELPER WITH EXPONENTIAL BACKOFF ---
   const callGemini = async (prompt, systemInstruction, retries = 5, delay = 1000) => {
+    if (!apiKey) {
+      throw new Error("API Key missing. Check Vercel Environment Variables.");
+    }
+    
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
     
     const payload = {
@@ -42,7 +44,6 @@ const App = () => {
     }
   };
 
-  // --- THE MULTI-AGENT DEBATE LOGIC ---
   const startSpark = async () => {
     if (!idea.trim()) return;
     setIsGenerating(true);
@@ -68,7 +69,7 @@ const App = () => {
 
       setResult({
         ...finalActualization,
-        imageUrl: "[https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80](https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80)", 
+        imageUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80", 
         details: {
           realist_note: finalActualization.realist_note,
           chaos_note: finalActualization.chaos_note
@@ -83,9 +84,8 @@ const App = () => {
     }
   };
 
-  // --- LOGO COMPONENT ---
   const LogoIcon = () => (
-    <svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" className="relative z-10">
+    <svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="relative z-10">
       <path d="M35 110C35 100 45 95 60 95H140C155 95 165 100 165 110V140H35V110Z" stroke="white" strokeWidth="2" strokeLinecap="round" />
       <path d="M30 140H170V160C170 165 165 168 160 168H40C35 168 30 165 30 160V140Z" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
       <circle cx="100" cy="70" r="18" stroke="white" strokeWidth="2.5" fill="#020617" />
@@ -98,7 +98,6 @@ const App = () => {
     </svg>
   );
 
-  // --- VIEWS ---
   if (view === 'input') return (
     <div className="min-h-screen bg-slate-950 p-6 flex flex-col text-white font-sans">
       <button onClick={() => setView('welcome')} className="mb-8 self-start p-2 hover:bg-slate-900 rounded-full transition-colors"><ArrowLeft size={24} /></button>
@@ -187,9 +186,8 @@ const App = () => {
   );
 };
 
-// THIS IS THE ENGINE STARTER FOR VERCEL
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <App />
-  </React.StrictMode>,
+  </React.StrictMode>
 );
