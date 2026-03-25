@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom/client';
 import { Send, Globe, Download, Share2, ArrowLeft, Loader2, Music, Sparkles } from 'lucide-react';
 
 // --- CONFIGURATION ---
-// This tells Vercel to grab your API key from the Environment Variables
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY || ""; 
 
 const App = () => {
@@ -14,6 +13,7 @@ const App = () => {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
 
+  // --- API HELPER WITH EXPONENTIAL BACKOFF ---
   const callGemini = async (prompt, systemInstruction, retries = 5, delay = 1000) => {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
     
@@ -42,6 +42,7 @@ const App = () => {
     }
   };
 
+  // --- THE MULTI-AGENT DEBATE LOGIC ---
   const startSpark = async () => {
     if (!idea.trim()) return;
     setIsGenerating(true);
@@ -67,7 +68,7 @@ const App = () => {
 
       setResult({
         ...finalActualization,
-        imageUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80", 
+        imageUrl: "[https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80](https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80)", 
         details: {
           realist_note: finalActualization.realist_note,
           chaos_note: finalActualization.chaos_note
@@ -82,8 +83,9 @@ const App = () => {
     }
   };
 
+  // --- LOGO COMPONENT ---
   const LogoIcon = () => (
-    <svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="relative z-10">
+    <svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" className="relative z-10">
       <path d="M35 110C35 100 45 95 60 95H140C155 95 165 100 165 110V140H35V110Z" stroke="white" strokeWidth="2" strokeLinecap="round" />
       <path d="M30 140H170V160C170 165 165 168 160 168H40C35 168 30 165 30 160V140Z" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
       <circle cx="100" cy="70" r="18" stroke="white" strokeWidth="2.5" fill="#020617" />
@@ -96,6 +98,7 @@ const App = () => {
     </svg>
   );
 
+  // --- VIEWS ---
   if (view === 'input') return (
     <div className="min-h-screen bg-slate-950 p-6 flex flex-col text-white font-sans">
       <button onClick={() => setView('welcome')} className="mb-8 self-start p-2 hover:bg-slate-900 rounded-full transition-colors"><ArrowLeft size={24} /></button>
@@ -179,20 +182,12 @@ const App = () => {
         <span className="relative z-10 flex items-center gap-2">
           Start Creating <Send size={22} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
         </span>
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
       </button>
-      <button className="text-slate-500 font-medium flex items-center gap-2 hover:text-white transition-colors group mt-2">
-        <Globe size={18} /> View Global Gallery
-      </button>
-      
-      <style>{`
-        @keyframes shimmer { 100% { transform: translateX(100%); } }
-      `}</style>
     </div>
   );
 };
 
-// --- This tells the browser to draw the App on the screen ---
+// THIS IS THE CRITICAL MISSING PIECE FOR VERCEL:
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <App />
