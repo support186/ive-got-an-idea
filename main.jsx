@@ -187,7 +187,7 @@ const App = () => {
   );
 };
 
-// THIS IS THE CRITICAL MISSING PIECE FOR VERCEL:
+// THIS IS THE ENGINE STARTER FOR VERCEL
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <App />
