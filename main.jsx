@@ -32,11 +32,23 @@ const App = () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        
+        if (!response.ok) {
+           const errorData = await response.json().catch(() => ({}));
+           console.error("API Error Response:", errorData);
+           throw new Error(`HTTP ${response.status}: ${errorData?.error?.message || 'API Request Failed'}`);
+        }
+        
         const data = await response.json();
         const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        
         if (!textResponse) throw new Error("Empty response from AI");
-        return JSON.parse(textResponse);
+        
+        // CRITICAL FIX: Strip invisible markdown formatting before parsing!
+        const cleanedText = textResponse.replace(/```json/gi, '').replace(/```/gi, '').trim();
+        
+        return JSON.parse(cleanedText);
+        
       } catch (err) {
         if (i === retries - 1) throw err;
         await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, i)));
@@ -60,16 +72,13 @@ const App = () => {
       const chaosAnalysis = await callGemini(idea, chaosSystem);
 
       setStatus("The Judge is synthesizing the final vision...");
-      const judgeSystem = `You are The Judge. You have the Realist's logic: ${JSON.stringify(realistAnalysis)} and the Chaos Artist's flair: ${JSON.stringify(chaosAnalysis)}. 
-      Your job is to balance them (60% chaos, 40% realist) into a final asset. 
-      Decide the category: POSTER, SCRIPT, MUSICAL, or BUSINESS_PLAN.
-      Output JSON schema: { \"category\": \"string\", \"title\": \"string\", \"content\": \"string\", \"realist_note\": \"string\", \"chaos_note\": \"string\" }`;
+      const judgeSystem = `You are The Judge. You have the Realist's logic: ${JSON.stringify(realistAnalysis)} and the Chaos Artist's flair: ${JSON.stringify(chaosAnalysis)}. Your job is to balance them (60% chaos, 40% realist) into a final asset. Decide the category: POSTER, SCRIPT, MUSICAL, or BUSINESS_PLAN. Output JSON schema: { \"category\": \"string\", \"title\": \"string\", \"content\": \"string\", \"realist_note\": \"string\", \"chaos_note\": \"string\" }`;
       
       const finalActualization = await callGemini(`Original Idea: ${idea}`, judgeSystem);
 
       setResult({
         ...finalActualization,
-        imageUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80", 
+        imageUrl: "[https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80](https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80)", 
         details: {
           realist_note: finalActualization.realist_note,
           chaos_note: finalActualization.chaos_note
@@ -78,14 +87,14 @@ const App = () => {
       setView('results');
     } catch (err) {
       console.error(err);
-      setError("The agents are debating too intensely. Please try again.");
+      setError(`Crash Report: ${err.message}`);
     } finally {
       setIsGenerating(false);
     }
   };
 
   const LogoIcon = () => (
-    <svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="relative z-10">
+    <svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" className="relative z-10">
       <path d="M35 110C35 100 45 95 60 95H140C155 95 165 100 165 110V140H35V110Z" stroke="white" strokeWidth="2" strokeLinecap="round" />
       <path d="M30 140H170V160C170 165 165 168 160 168H40C35 168 30 165 30 160V140Z" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
       <circle cx="100" cy="70" r="18" stroke="white" strokeWidth="2.5" fill="#020617" />
