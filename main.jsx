@@ -17,12 +17,11 @@ const App = () => {
       throw new Error("API Key missing. Check Vercel Environment Variables.");
     }
     
-    // Switch to the foundational gemini-pro model which is universally available
+    // Using the foundational gemini-pro model to bypass the 404 errors
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
     
-    // gemini-pro does not support advanced JSON or SystemInstruction configurations.
-    // We must combine the instructions and strictly tell it to format as JSON.
-    const combinedPrompt = `${systemInstruction}\n\nUSER IDEA:\n${prompt}\n\nCRITICAL INSTRUCTION: You must return ONLY valid JSON. Do not include markdown brackets, explanations, or any other text.`;
+    // Combine instructions into one prompt since gemini-pro doesn't support the systemInstruction feature
+    const combinedPrompt = `${systemInstruction}\n\nUSER IDEA:\n${prompt}\n\nCRITICAL INSTRUCTION: You must return ONLY valid JSON. Do not include markdown brackets or any other text.`;
     
     const payload = {
       contents: [{ parts: [{ text: combinedPrompt }] }]
@@ -47,15 +46,11 @@ const App = () => {
         
         if (!textResponse) throw new Error("Empty response from AI");
         
-        // Strip invisible markdown formatting before parsing to prevent crashes
         const cleanedText = textResponse.replace(/```json/gi, '').replace(/```/gi, '').trim();
-        
         return JSON.parse(cleanedText);
         
       } catch (err) {
-        if (i === retries - 1) {
-            throw err;
-        }
+        if (i === retries - 1) throw err;
         await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, i)));
       }
     }
@@ -120,7 +115,7 @@ const App = () => {
       <textarea 
         value={idea} 
         onChange={(e) => setIdea(e.target.value)} 
-        placeholder="e.g. A surrealist band cover art..." 
+        placeholder="e.g. A musical about a man who never leaves his couch..." 
         className="flex-1 bg-slate-900 border-2 border-slate-800 rounded-3xl p-6 text-lg focus:outline-none focus:border-cyan-500 transition-all resize-none text-white placeholder-slate-600 shadow-inner" 
       />
       <div className="mt-8">
