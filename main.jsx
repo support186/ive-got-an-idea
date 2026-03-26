@@ -17,10 +17,10 @@ const App = () => {
       throw new Error("API Key missing. Check Vercel Environment Variables.");
     }
     
-    // Using the foundational gemini-pro model to bypass the 404 errors
+    // Using gemini-pro to bypass the 404 errors you were getting
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
     
-    // Combine instructions into one prompt since gemini-pro doesn't support the systemInstruction feature
+    // Combine instructions since gemini-pro doesn't use the newer systemInstruction format
     const combinedPrompt = `${systemInstruction}\n\nUSER IDEA:\n${prompt}\n\nCRITICAL INSTRUCTION: You must return ONLY valid JSON. Do not include markdown brackets or any other text.`;
     
     const payload = {
@@ -115,7 +115,7 @@ const App = () => {
       <textarea 
         value={idea} 
         onChange={(e) => setIdea(e.target.value)} 
-        placeholder="e.g. A musical about a man who never leaves his couch..." 
+        placeholder="e.g. A surrealist band cover art..." 
         className="flex-1 bg-slate-900 border-2 border-slate-800 rounded-3xl p-6 text-lg focus:outline-none focus:border-cyan-500 transition-all resize-none text-white placeholder-slate-600 shadow-inner" 
       />
       <div className="mt-8">
@@ -195,4 +195,9 @@ const App = () => {
   );
 };
 
-export default App;
+// THIS IS THE LINE I DELETED BY MISTAKE. IT DRAWS THE APP TO THE SCREEN.
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
