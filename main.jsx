@@ -17,7 +17,7 @@ const App = () => {
       throw new Error("API Key missing. Check Vercel Environment Variables.");
     }
     
-    // FIX: Back to the standard model name!
+    // Explicitly targeting the stable gemini-1.5-flash
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
     
     const payload = {
@@ -45,7 +45,6 @@ const App = () => {
         
         if (!textResponse) throw new Error("Empty response from AI");
         
-        // Strip invisible markdown formatting before parsing
         const cleanedText = textResponse.replace(/```json/gi, '').replace(/```/gi, '').trim();
         
         return JSON.parse(cleanedText);
@@ -73,7 +72,10 @@ const App = () => {
       const chaosAnalysis = await callGemini(idea, chaosSystem);
 
       setStatus("The Judge is synthesizing the final vision...");
-      const judgeSystem = `You are The Judge. You have the Realist's logic: ${JSON.stringify(realistAnalysis)} and the Chaos Artist's flair: ${JSON.stringify(chaosAnalysis)}. Your job is to balance them (60% chaos, 40% realist) into a final asset. Decide the category: POSTER, SCRIPT, MUSICAL, or BUSINESS_PLAN. Output JSON schema: { \"category\": \"string\", \"title\": \"string\", \"content\": \"string\", \"realist_note\": \"string\", \"chaos_note\": \"string\" }`;
+      const judgeSystem = `You are The Judge. You have the Realist's logic: ${JSON.stringify(realistAnalysis)} and the Chaos Artist's flair: ${JSON.stringify(chaosAnalysis)}. 
+      Your job is to balance them (60% chaos, 40% realist) into a final asset. 
+      Decide the category: POSTER, SCRIPT, MUSICAL, or BUSINESS_PLAN.
+      Output JSON schema: { \"category\": \"string\", \"title\": \"string\", \"content\": \"string\", \"realist_note\": \"string\", \"chaos_note\": \"string\" }`;
       
       const finalActualization = await callGemini(`Original Idea: ${idea}`, judgeSystem);
 
