@@ -17,7 +17,8 @@ const App = () => {
       throw new Error("API Key missing. Check Vercel Environment Variables.");
     }
     
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+    // FIX: Back to the standard model name!
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
     
     const payload = {
       contents: [{ parts: [{ text: prompt }] }],
@@ -44,7 +45,7 @@ const App = () => {
         
         if (!textResponse) throw new Error("Empty response from AI");
         
-        // CRITICAL FIX: Strip invisible markdown formatting before parsing!
+        // Strip invisible markdown formatting before parsing
         const cleanedText = textResponse.replace(/```json/gi, '').replace(/```/gi, '').trim();
         
         return JSON.parse(cleanedText);
@@ -78,7 +79,7 @@ const App = () => {
 
       setResult({
         ...finalActualization,
-        imageUrl: "[https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80](https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80)", 
+        imageUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80", 
         details: {
           realist_note: finalActualization.realist_note,
           chaos_note: finalActualization.chaos_note
@@ -94,7 +95,7 @@ const App = () => {
   };
 
   const LogoIcon = () => (
-    <svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" className="relative z-10">
+    <svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="relative z-10">
       <path d="M35 110C35 100 45 95 60 95H140C155 95 165 100 165 110V140H35V110Z" stroke="white" strokeWidth="2" strokeLinecap="round" />
       <path d="M30 140H170V160C170 165 165 168 160 168H40C35 168 30 165 30 160V140Z" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
       <circle cx="100" cy="70" r="18" stroke="white" strokeWidth="2.5" fill="#020617" />
