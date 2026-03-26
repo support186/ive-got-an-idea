@@ -17,13 +17,15 @@ const App = () => {
       throw new Error("API Key missing. Check Vercel Environment Variables.");
     }
     
-    // Explicitly targeting the stable gemini-1.5-flash
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    // Switch to the foundational gemini-pro model which is universally available
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+    
+    // gemini-pro does not support advanced JSON or SystemInstruction configurations.
+    // We must combine the instructions and strictly tell it to format as JSON.
+    const combinedPrompt = `${systemInstruction}\n\nUSER IDEA:\n${prompt}\n\nCRITICAL INSTRUCTION: You must return ONLY valid JSON. Do not include markdown brackets, explanations, or any other text.`;
     
     const payload = {
-      contents: [{ parts: [{ text: prompt }] }],
-      systemInstruction: { parts: [{ text: systemInstruction }] },
-      generationConfig: { responseMimeType: "application/json" }
+      contents: [{ parts: [{ text: combinedPrompt }] }]
     };
 
     for (let i = 0; i < retries; i++) {
@@ -45,12 +47,15 @@ const App = () => {
         
         if (!textResponse) throw new Error("Empty response from AI");
         
+        // Strip invisible markdown formatting before parsing to prevent crashes
         const cleanedText = textResponse.replace(/```json/gi, '').replace(/```/gi, '').trim();
         
         return JSON.parse(cleanedText);
         
       } catch (err) {
-        if (i === retries - 1) throw err;
+        if (i === retries - 1) {
+            throw err;
+        }
         await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, i)));
       }
     }
@@ -64,18 +69,15 @@ const App = () => {
 
     try {
       setStatus("Agent 1 (The Realist) is grounding the idea...");
-      const realistSystem = "You are a pragmatic, logic-driven business consultant. Analyze the user's idea and provide a grounded, feasible structured breakdown. Output JSON: { \"feasibility\": \"string\", \"structure\": \"string\" }";
+      const realistSystem = "You are a pragmatic, logic-driven business consultant. Analyze the user's idea and provide a grounded, feasible structured breakdown. Output JSON schema: { \"feasibility\": \"string\", \"structure\": \"string\" }";
       const realistAnalysis = await callGemini(idea, realistSystem);
 
       setStatus("Agent 2 (The Chaos Artist) is adding extreme wacky energy...");
-      const chaosSystem = "You are a wild, avant-garde artist who hates the status quo. Take the user's idea and inject it with 'ridiculous' energy and abstract flair. Output JSON: { \"wacky_elements\": \"string\", \"abstract_twist\": \"string\" }";
+      const chaosSystem = "You are a wild, avant-garde artist who hates the status quo. Take the user's idea and inject it with 'ridiculous' energy and abstract flair. Output JSON schema: { \"wacky_elements\": \"string\", \"abstract_twist\": \"string\" }";
       const chaosAnalysis = await callGemini(idea, chaosSystem);
 
       setStatus("The Judge is synthesizing the final vision...");
-      const judgeSystem = `You are The Judge. You have the Realist's logic: ${JSON.stringify(realistAnalysis)} and the Chaos Artist's flair: ${JSON.stringify(chaosAnalysis)}. 
-      Your job is to balance them (60% chaos, 40% realist) into a final asset. 
-      Decide the category: POSTER, SCRIPT, MUSICAL, or BUSINESS_PLAN.
-      Output JSON schema: { \"category\": \"string\", \"title\": \"string\", \"content\": \"string\", \"realist_note\": \"string\", \"chaos_note\": \"string\" }`;
+      const judgeSystem = `You are The Judge. You have the Realist's logic: ${JSON.stringify(realistAnalysis)} and the Chaos Artist's flair: ${JSON.stringify(chaosAnalysis)}. Your job is to balance them (60% chaos, 40% realist) into a final asset concept. Decide the category: POSTER, SCRIPT, MUSICAL, or BUSINESS_PLAN. Output JSON schema: { \"category\": \"string\", \"title\": \"string\", \"content\": \"string\", \"realist_note\": \"string\", \"chaos_note\": \"string\" }`;
       
       const finalActualization = await callGemini(`Original Idea: ${idea}`, judgeSystem);
 
@@ -118,7 +120,7 @@ const App = () => {
       <textarea 
         value={idea} 
         onChange={(e) => setIdea(e.target.value)} 
-        placeholder="e.g. A musical about a man who never leaves his couch..." 
+        placeholder="e.g. A surrealist band cover art..." 
         className="flex-1 bg-slate-900 border-2 border-slate-800 rounded-3xl p-6 text-lg focus:outline-none focus:border-cyan-500 transition-all resize-none text-white placeholder-slate-600 shadow-inner" 
       />
       <div className="mt-8">
@@ -198,8 +200,4 @@ const App = () => {
   );
 };
 
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+export default App;
